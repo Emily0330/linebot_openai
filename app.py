@@ -11,7 +11,7 @@ from linebot.models import *
 #======python的函數庫==========
 import tempfile, os
 import datetime
-import openai
+# import openai
 import time
 #======python的函數庫==========
 
@@ -57,7 +57,8 @@ def handle_message(event):
     # GPT_answer = GPT_response(msg)
     # print(GPT_answer)
     # line_bot_api.reply_message(event.reply_token, TextSendMessage(GPT_answer))
-    line_bot_api.reply_message(event.reply_token, TextSendMessage("hi"))
+    # echo
+    line_bot_api.reply_message(event.reply_token, TextSendMessage(msg))
 @handler.add(PostbackEvent)
 def handle_message(event):
     print(event.postback.data)
@@ -69,7 +70,7 @@ def welcome(event):
     gid = event.source.group_id
     profile = line_bot_api.get_group_member_profile(gid, uid)
     name = profile.display_name
-    message = TextSendMessage(text=f'{name}歡迎加入')
+    message = TextSendMessage(text=f'{name}歡迎加入，I am an Echo Bot.')
     line_bot_api.reply_message(event.reply_token, message)
         
         
