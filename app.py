@@ -73,6 +73,7 @@ def handle_message(event):
         del_item=msg[4:]
         if del_item in todo_list:
             todo_list.remove(del_item)
+            line_bot_api.reply_message(event.reply_token, TextSendMessage(text="Deleted successfully!"))
         elif del_item.strip() == "":
             line_bot_api.reply_message(event.reply_token, TextSendMessage(text="你沒有告訴我要刪除什麼XD"))
         else:
