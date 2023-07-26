@@ -90,7 +90,8 @@ def handle_message(event):
         line_bot_api.reply_message(event.reply_token, TextSendMessage(text="1. 輸入「add 事項1 事項2 事項3 ... 」新增今日待辦事項\n\
                                                                       2. 輸入「list」以列出今日待辦事項\n\
                                                                       3. 輸入「del 某事項」以刪除某待辦事項\n\
-                                                                      4. 輸入「help」取得使用說明"))
+                                                                      4. 輸入「reset」一次清空所有待辦事項\n\
+                                                                      5. 輸入「help」取得使用說明"))
     else:
         line_bot_api.reply_message(event.reply_token, TextSendMessage(text="TODO機器人還沒有這個功能唷!\n\
                                                                       趕快聯繫開發者許願吧!"))
