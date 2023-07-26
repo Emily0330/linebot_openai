@@ -33,6 +33,7 @@ def GPT_response(text):
     answer = response['choices'][0]['text'].replace('。','')
     return answer
 '''
+uid=0
 
 # 監聽所有來自 /callback 的 Post Request
 @app.route("/callback", methods=['POST'])
@@ -50,6 +51,7 @@ def callback():
     return 'OK'
 
 todo_list=[]
+todo_dict={}
 # 處理訊息
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
@@ -57,14 +59,30 @@ def handle_message(event):
     # echo
     # line_bot_api.reply_message(event.reply_token, TextSendMessage(msg))
     if msg[:4] == "add ":
-        print("success!")
-        tmp=msg[5:].split(' ')
+        tmp=msg[4:].split(' ')
         for i in tmp:
-            todo_list.append(i)
+            if i not in todo_list:
+                todo_list.append(i)
         line_bot_api.reply_message(event.reply_token, TextSendMessage(text="Added successfully!"))
-    if msg[:5] == "list ":
+
+    elif msg == "list":
         retu = "、".join(todo_list)
         line_bot_api.reply_message(event.reply_token, TextSendMessage(text=f"今日待辦事項:\n{retu}"))
+
+    elif msg[:4] == "del ":
+        del_item=msg[4:]
+        if del_item in todo_list:
+            todo_list.remove(del_item)
+        elif del_item.strip() == "":
+            line_bot_api.reply_message(event.reply_token, TextSendMessage(text="你沒有告訴我要刪除什麼XD"))
+        else:
+            line_bot_api.reply_message(event.reply_token, TextSendMessage(text=f"{del_item} 不在今日的TODO list!"))
+    elif msg == "help":
+        line_bot_api.reply_message(event.reply_token, TextSendMessage(text="1. 輸入「add 事項1 事項2 事項3 ... 」新增今日待辦事項\n\
+                                                                      2. 輸入「list」以列出今日待辦事項\n\
+                                                                      3. 輸入「del 某事項」以刪除某待辦事項\n\
+                                                                      4. 輸入「help」取得使用說明"))
+
 @handler.add(PostbackEvent)
 def handle_message(event):
     print(event.postback.data)
@@ -72,11 +90,12 @@ def handle_message(event):
 
 @handler.add(MemberJoinedEvent)
 def welcome(event):
+    global uid
     uid = event.joined.members[0].user_id
     gid = event.source.group_id
     profile = line_bot_api.get_group_member_profile(gid, uid)
     name = profile.display_name
-    message = TextSendMessage(text=f'{name}歡迎加入，I am an Echo Bot.')
+    message = TextSendMessage(text=f'{name}歡迎加入，請輸入「help」取得使用說明')
     line_bot_api.reply_message(event.reply_token, message)
         
         
