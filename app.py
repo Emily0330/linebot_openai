@@ -66,8 +66,11 @@ def handle_message(event):
         line_bot_api.reply_message(event.reply_token, TextSendMessage(text="Added successfully!"))
 
     elif msg == "list":
-        retu = "、".join(todo_list)
-        line_bot_api.reply_message(event.reply_token, TextSendMessage(text=f"今日待辦事項:\n{retu}"))
+        if todo_list == []:
+            line_bot_api.reply_message(event.reply_token, TextSendMessage(text="今天還沒有待辦事項哦!\n使用add指令添加吧~"))
+        else:
+            retu = "、".join(todo_list)
+            line_bot_api.reply_message(event.reply_token, TextSendMessage(text=f"今日待辦事項:\n{retu}"))
 
     elif msg[:4] == "del ":
         del_item=msg[4:]
@@ -78,11 +81,19 @@ def handle_message(event):
             line_bot_api.reply_message(event.reply_token, TextSendMessage(text="你沒有告訴我要刪除什麼XD"))
         else:
             line_bot_api.reply_message(event.reply_token, TextSendMessage(text=f"{del_item} 不在今日的TODO list!"))
+
+    elif msg == "reset":
+        todo_list = []
+        line_bot_api.reply_message(event.reply_token, TextSendMessage(text="TODO list has been reset!\n\
+                                                                      Enjoy your day <3"))
     elif msg == "help":
         line_bot_api.reply_message(event.reply_token, TextSendMessage(text="1. 輸入「add 事項1 事項2 事項3 ... 」新增今日待辦事項\n\
                                                                       2. 輸入「list」以列出今日待辦事項\n\
                                                                       3. 輸入「del 某事項」以刪除某待辦事項\n\
                                                                       4. 輸入「help」取得使用說明"))
+    else:
+        line_bot_api.reply_message(event.reply_token, TextSendMessage(text="TODO機器人還沒有這個功能唷!\n\
+                                                                      趕快聯繫開發者許願吧!"))
 
 @handler.add(PostbackEvent)
 def handle_message(event):
