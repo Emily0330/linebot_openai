@@ -8,6 +8,8 @@ packages = [{include = "linebot_openai"}]
 
 [tool.poetry.dependencies]
 python = "^3.10"
+flask = "^2.3.2"
+line-bot-sdk = "^3.1.0"
 
 
 [build-system]

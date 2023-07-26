@@ -49,16 +49,21 @@ def callback():
         abort(400)
     return 'OK'
 
-
+todo_list=[]
 # 處理訊息
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
     msg = event.message.text
-    # GPT_answer = GPT_response(msg)
-    # print(GPT_answer)
-    # line_bot_api.reply_message(event.reply_token, TextSendMessage(GPT_answer))
     # echo
-    line_bot_api.reply_message(event.reply_token, TextSendMessage(msg))
+    # line_bot_api.reply_message(event.reply_token, TextSendMessage(msg))
+    if msg[:4] == "add ":
+        tmp=msg[5:].split('')
+        for i in tmp:
+            todo_list.append(i)
+        line_bot_api.reply_message(event.reply_token, "Added successfully!")
+    if msg[:5] == "list ":
+        retu = "、".join(todo_list)
+        line_bot_api.reply_message(event.reply_token, f"今日待辦事項:\n{retu}")
 @handler.add(PostbackEvent)
 def handle_message(event):
     print(event.postback.data)
