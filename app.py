@@ -18,7 +18,7 @@ import time
 app = Flask(__name__)
 static_tmp_path = os.path.join(os.path.dirname(__file__), 'static', 'tmp')
 # Channel Access Token
-line_bot_api = LineBotApi(os.getenv('CHANNEL_ACCESS_TOKEN'))
+line_bot_api = LineBotApi(os.getenv('CHANNEL_ACCESS_TOKEN')) #記得加回去
 # Channel Secret
 handler = WebhookHandler(os.getenv('CHANNEL_SECRET'))
 # OPENAI API Key初始化設定
@@ -57,6 +57,7 @@ def handle_message(event):
     # echo
     # line_bot_api.reply_message(event.reply_token, TextSendMessage(msg))
     if msg[:4] == "add ":
+        print("success!")
         tmp=msg[5:].split(' ')
         for i in tmp:
             todo_list.append(i)
