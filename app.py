@@ -58,6 +58,7 @@ def handle_message(event):
     msg = event.message.text
     # echo
     # line_bot_api.reply_message(event.reply_token, TextSendMessage(msg))
+    global todo_list
     if msg[:4] == "add ":
         tmp=msg[4:].split(' ')
         for i in tmp:
@@ -66,7 +67,6 @@ def handle_message(event):
         line_bot_api.reply_message(event.reply_token, TextSendMessage(text="Added successfully!"))
 
     elif msg == "list":
-        global todo_list
         if not todo_list: # the list is empty
             line_bot_api.reply_message(event.reply_token, TextSendMessage(text="今天還沒有待辦事項哦!\n使用add指令添加吧~"))
         else:
