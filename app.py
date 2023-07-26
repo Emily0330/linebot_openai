@@ -60,10 +60,10 @@ def handle_message(event):
         tmp=msg[5:].split(' ')
         for i in tmp:
             todo_list.append(i)
-        line_bot_api.reply_message(event.reply_token, "Added successfully!")
+        line_bot_api.reply_message(event.reply_token, TextSendMessage(text="Added successfully!"))
     if msg[:5] == "list ":
         retu = "、".join(todo_list)
-        line_bot_api.reply_message(event.reply_token, f"今日待辦事項:\n{retu}")
+        line_bot_api.reply_message(event.reply_token, TextSendMessage(text=f"今日待辦事項:\n{retu}"))
 @handler.add(PostbackEvent)
 def handle_message(event):
     print(event.postback.data)
