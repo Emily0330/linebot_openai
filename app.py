@@ -35,7 +35,7 @@ def GPT_response(text):
     answer = response['choices'][0]['text'].replace('。','')
     return answer
 '''
-uid='000'
+# uid='000'
 
 # 監聽所有來自 /callback 的 Post Request
 @app.route("/callback", methods=['POST'])
@@ -63,6 +63,7 @@ todo_dict={}
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
     msg = event.message.text
+    userID = event.joined.members[0].user_id
     # echo
     # line_bot_api.reply_message(event.reply_token, TextSendMessage(msg))
     global todo_list
@@ -71,8 +72,8 @@ def handle_message(event):
         for i in tmp:
             if i not in todo_list:
                 todo_list.append(i)
-            if i not in todo_dict[uid]:
-                todo_dict[uid].append(i) #dict
+            if i not in todo_dict[userID]:
+                todo_dict[userID].append(i) #dict
         line_bot_api.reply_message(event.reply_token, TextSendMessage(text="Added successfully!"))
 
     elif msg == "list":
@@ -86,8 +87,8 @@ def handle_message(event):
         del_item=msg[4:]
         if del_item in todo_list:
             todo_list.remove(del_item)
-        if del_item in todo_dict[uid]:
-            todo_dict[uid].remove(del_item)
+        if del_item in todo_dict[userID]:
+            todo_dict[userID].remove(del_item)
             line_bot_api.reply_message(event.reply_token, TextSendMessage(text="Deleted successfully!"))
         elif del_item.strip() == "":
             line_bot_api.reply_message(event.reply_token, TextSendMessage(text="你沒有告訴我要刪除什麼XD"))
@@ -96,7 +97,7 @@ def handle_message(event):
 
     elif msg == "reset":
         todo_list = []
-        todo_dict[uid] = [] # dict
+        todo_dict[userID] = [] # dict
         line_bot_api.reply_message(event.reply_token, TextSendMessage(text="TODO list has been reset!\n\
                                                                       Enjoy your day <3"))
     elif msg == "help":
@@ -119,7 +120,7 @@ def handle_message(event):
 
 @handler.add(MemberJoinedEvent)
 def welcome(event):
-    global uid
+    # global uid
     uid = event.joined.members[0].user_id
     gid = event.source.group_id
     profile = line_bot_api.get_group_member_profile(gid, uid)
