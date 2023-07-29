@@ -67,6 +67,9 @@ def handle_message(event):
     # echo
     # line_bot_api.reply_message(event.reply_token, TextSendMessage(msg))
     global todo_list
+    global todo_dict
+    if userID not in todo_dict:
+        todo_dict[userID]=[]
     if msg[:4] == "add ":
         tmp=msg[4:].split(' ')
         for i in tmp:
