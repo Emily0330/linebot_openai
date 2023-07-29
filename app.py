@@ -73,33 +73,40 @@ def handle_message(event):
     if msg[:4] == "add ":
         tmp=msg[4:].split(' ')
         for i in tmp:
-            if i not in todo_list:
-                todo_list.append(i)
+            """ if i not in todo_list:
+                todo_list.append(i) """
             if i not in todo_dict[userID]:
                 todo_dict[userID].append(i) #dict
         line_bot_api.reply_message(event.reply_token, TextSendMessage(text="Added successfully!"))
 
     elif msg == "list":
-        if not todo_list: # the list is empty
+        """ if not todo_list: # the list is empty
             line_bot_api.reply_message(event.reply_token, TextSendMessage(text="今天還沒有待辦事項哦!\n使用add指令添加吧~"))
         else:
             retu = "、".join(todo_list)
             line_bot_api.reply_message(event.reply_token, TextSendMessage(text=f"今日待辦事項:\n{retu}"))
+ """
+        if not todo_dict[userID]: # the usr's list is empty
+            line_bot_api.reply_message(event.reply_token, TextSendMessage(text="今天還沒有待辦事項哦!\n使用add指令添加吧~"))
+        else:
+            retu = "、".join(todo_dict[userID])
+            line_bot_api.reply_message(event.reply_token, TextSendMessage(text=f"今日待辦事項:\n{retu}"))
 
     elif msg[:4] == "del ":
         del_item=msg[4:]
-        if del_item in todo_list:
-            todo_list.remove(del_item)
+        # if del_item in todo_list:
+            # todo_list.remove(del_item)
         if del_item in todo_dict[userID]:
             todo_dict[userID].remove(del_item)
             line_bot_api.reply_message(event.reply_token, TextSendMessage(text="Deleted successfully!"))
+            print(todo_dict) # test
         elif del_item.strip() == "":
             line_bot_api.reply_message(event.reply_token, TextSendMessage(text="你沒有告訴我要刪除什麼XD"))
         else:
             line_bot_api.reply_message(event.reply_token, TextSendMessage(text=f"{del_item} 不在今日的TODO list!"))
 
     elif msg == "reset":
-        todo_list = []
+        # todo_list = []
         todo_dict[userID] = [] # dict
         line_bot_api.reply_message(event.reply_token, TextSendMessage(text="TODO list has been reset!\n\
                                                                       Enjoy your day <3"))
