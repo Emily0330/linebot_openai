@@ -63,7 +63,7 @@ todo_dict={}
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
     msg = event.message.text
-    userID = event.joined.members[0].user_id
+    userID = event.source.user_id
     # echo
     # line_bot_api.reply_message(event.reply_token, TextSendMessage(msg))
     global todo_list
