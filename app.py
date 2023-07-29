@@ -13,6 +13,8 @@ import tempfile, os
 import datetime
 # import openai
 import time
+# import json
+import json
 #======python的函數庫==========
 
 app = Flask(__name__)
@@ -33,7 +35,7 @@ def GPT_response(text):
     answer = response['choices'][0]['text'].replace('。','')
     return answer
 '''
-uid=0
+uid='000'
 
 # 監聽所有來自 /callback 的 Post Request
 @app.route("/callback", methods=['POST'])
@@ -52,6 +54,11 @@ def callback():
 
 todo_list=[]
 todo_dict={}
+'''
+{
+    "USER_ID": [] #todo_list
+}
+'''
 # 處理訊息
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
@@ -64,6 +71,8 @@ def handle_message(event):
         for i in tmp:
             if i not in todo_list:
                 todo_list.append(i)
+            if i not in todo_dict[uid]:
+                todo_dict[uid].append(i) #dict
         line_bot_api.reply_message(event.reply_token, TextSendMessage(text="Added successfully!"))
 
     elif msg == "list":
@@ -77,6 +86,8 @@ def handle_message(event):
         del_item=msg[4:]
         if del_item in todo_list:
             todo_list.remove(del_item)
+        if del_item in todo_dict[uid]:
+            todo_dict[uid].remove(del_item)
             line_bot_api.reply_message(event.reply_token, TextSendMessage(text="Deleted successfully!"))
         elif del_item.strip() == "":
             line_bot_api.reply_message(event.reply_token, TextSendMessage(text="你沒有告訴我要刪除什麼XD"))
@@ -85,6 +96,7 @@ def handle_message(event):
 
     elif msg == "reset":
         todo_list = []
+        todo_dict[uid] = [] # dict
         line_bot_api.reply_message(event.reply_token, TextSendMessage(text="TODO list has been reset!\n\
                                                                       Enjoy your day <3"))
     elif msg == "help":
@@ -96,6 +108,9 @@ def handle_message(event):
     else:
         line_bot_api.reply_message(event.reply_token, TextSendMessage(text="TODO機器人還沒有這個功能唷!\n\
                                                                       趕快聯繫開發者許願吧!"))
+    with open("usr_info.json", "a", encoding="utf-8") as f:
+        json.dump(todo_dict, f, indent=2, sort_keys=False, ensure_ascii=False)
+        f.close()
 
 @handler.add(PostbackEvent)
 def handle_message(event):
