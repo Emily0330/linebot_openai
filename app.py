@@ -54,6 +54,7 @@ def callback():
     return 'OK'
 # Line bot 接收訊息的 Webhook 路由
 # @app.route("/callback", methods=["POST"])
+'''
 def webhook():
     data = request.get_json()
 
@@ -122,6 +123,7 @@ def webhook():
         line_bot_api.reply_message(reply_token, "已刪除!")
 
     return jsonify({"success": True})
+'''
 todo_dict={}
 '''
 {
@@ -161,76 +163,71 @@ def handle_message(event):
         else:
             retu = "、".join(todo_list)
             line_bot_api.reply_message(event.reply_token, TextSendMessage(text=f"今日待辦事項:\n{retu}"))
-            '''
+            
     # delete
-    elif str(msg[:4]).lower() == "del ":
-        del_item=msg[4:]
-        
-        if del_item.strip() == "":
-            line_bot_api.reply_message(event.reply_token, TextSendMessage(text="你沒有告訴我要刪除什麼XD"))
+    elif str(msg).lower() == "del":
+        response = "請選擇要刪除的項目："
+
+        # 動態生成 Checkbox Template 的 actions
+        actions = []
+        for i, item in enumerate(todo_list):
+            action = {
+                "type": "postback",
+                "label": item,
+                "data": f"/delete_confirm {i+1}"  # 回傳使用者選擇的項目編號（從 1 開始）
+            }
+            actions.append(action)
+
+        # 建立 Checkbox Template 選單
+        checkbox_template = {
+            "type": "template",
+            "altText": "請勾選要刪除的項目",
+            "template": {
+                "type": "buttons",
+                "text": response,
+                "actions": actions
+            }
+        }
+
+        # 回覆使用者訊息，使用 Checkbox Template 提供選項
+        reply_message = {
+            "replyToken": event.reply_token,
+            "messages": [checkbox_template]
+        }
+
+        # 傳送回覆訊息給 Line bot
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer YOUR_CHANNEL_ACCESS_TOKEN"  # 替換成你的 Line bot 的 Channel Access Token
+        }
+        response = requests.post("https://api.line.me/v2/bot/message/reply", json=reply_message, headers=headers)
+
+    elif msg.startswith("/delete_confirm "):
+        # 解析使用者選擇的項目編號
+        selected_index = int(msg.split()[1]) - 1  # 因為使用者輸入的編號是從 1 開始，而我們的索引是從 0 開始
+        # 執行刪除功能
+        del todo_list[selected_index]
+        update = {"$set": {"todo_item": todo_list}} # $set是運算子
+        result = collection.update_one(query, update)
+
+        # 取得 Line bot 的 reply_token
+        reply_token = event.reply_token
+        # 使用 requests.post 發送 "已刪除!" 的訊息給使用者
+        line_bot_api.reply_message(reply_token, "已刪除!")
+
+        return jsonify({"success": True})
+
+        '''
+        if co_possi_item == 0:
+            line_bot_api.reply_message(event.reply_token, TextSendMessage(text=f"{del_item} 不在今日的TODO list!"))
+        elif
+        elif del_item in todo_list:
+            todo_list.remove(del_item)
+            update = {"$set": {"todo_item": todo_list}} # $set是運算子
+            result = collection.update_one(query, update)
+            line_bot_api.reply_message(event.reply_token, TextSendMessage(text="Deleted successfully!"))
         else:
-            # 動態生成 Checkbox Template 的 actions
-            actions = []
-            for i, item in enumerate(todo_list):
-                action = {
-                    "type": "postback",
-                    "label": item,
-                    "data": f"/delete_confirm {i+1}"  # 回傳使用者選擇的項目編號（從 1 開始）
-                }
-                actions.append(action)
-
-            # 建立 Checkbox Template 選單
-            checkbox_template = {
-                "type": "template",
-                "altText": "請勾選要刪除的項目",
-                "template": {
-                    "type": "buttons",
-                    "text": response,
-                    "actions": actions
-                }
-            }
-
-            # 回覆使用者訊息，使用 Checkbox Template 提供選項
-            reply_message = {
-                "replyToken": data["events"][0]["replyToken"],
-                "messages": [checkbox_template]
-            }
-
-            # 傳送回覆訊息給 Line bot
-            headers = {
-                "Content-Type": "application/json",
-                "Authorization": "Bearer YOUR_CHANNEL_ACCESS_TOKEN"  # 替換成你的 Line bot 的 Channel Access Token
-            }
-            response = requests.post("https://api.line.me/v2/bot/message/reply", json=reply_message, headers=headers)
-            '''
-            '''
-            del_list=[]
-            first_char = del_item[0]
-            for item in todo_list:
-                if first_char == item[0]:
-                    del_list.append(item)
-            match len(del_list):
-                case 0:
-                    line_bot_api.reply_message(event.reply_token, TextSendMessage(text=f"{del_item} 不在今日的TODO list!"))
-                case 1:
-                    todo_list.remove(del_item)
-                    update = {"$set": {"todo_item": todo_list}} # $set是運算子
-                    result = collection.update_one(query, update)
-                    line_bot_api.reply_message(event.reply_token, TextSendMessage(text="Deleted successfully!"))
-                case _: # default case, more than one item
-            '''
-
-            '''
-            if co_possi_item == 0:
-                line_bot_api.reply_message(event.reply_token, TextSendMessage(text=f"{del_item} 不在今日的TODO list!"))
-            elif
-            elif del_item in todo_list:
-                todo_list.remove(del_item)
-                update = {"$set": {"todo_item": todo_list}} # $set是運算子
-                result = collection.update_one(query, update)
-                line_bot_api.reply_message(event.reply_token, TextSendMessage(text="Deleted successfully!"))
-            else:
-            '''
+        '''
     elif str(msg).lower() == "reset":
         todo_list = []
         # todo_dict[userID] = [] # dict
