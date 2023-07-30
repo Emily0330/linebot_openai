@@ -85,7 +85,7 @@ def handle_message(event):
         # todo_dict[userID]=[]
     query = {"user_id": userID}
     result = collection.find_one(query)
-    print(type(result)) #test
+    # print(type(result)) #test
     # 檢查結果是否為 None，即是否找到該 user_id 的資料
     if result is None:
         collection.insert_one({"user_id": userID, "todo_item": []})
@@ -96,7 +96,7 @@ def handle_message(event):
         for i in tmp:
             if i not in todo_list:
                 todo_list.append(i)
-        update = {"$set": {"todo_items": todo_list}} # $set是運算子
+        update = {"$set": {"todo_item": todo_list}} # $set是運算子
         result = collection.update_one(query, update)
         line_bot_api.reply_message(event.reply_token, TextSendMessage(text="Added successfully!"))
 
@@ -123,7 +123,7 @@ def handle_message(event):
         """
         if del_item in todo_list:
             todo_list.remove(del_item)
-            update = {"$set": {"todo_items": todo_list}} # $set是運算子
+            update = {"$set": {"todo_item": todo_list}} # $set是運算子
             result = collection.update_one(query, update)
         elif del_item.strip() == "":
             line_bot_api.reply_message(event.reply_token, TextSendMessage(text="你沒有告訴我要刪除什麼XD"))
@@ -133,7 +133,7 @@ def handle_message(event):
     elif msg == "reset":
         todo_list = []
         # todo_dict[userID] = [] # dict
-        update = {"$set": {"todo_items": todo_list}} # $set是運算子
+        update = {"$set": {"todo_item": todo_list}} # $set是運算子
         result = collection.update_one(query, update)
         line_bot_api.reply_message(event.reply_token, TextSendMessage(text="TODO list has been reset!\n\
                                                                       Enjoy your day <3"))
