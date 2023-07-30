@@ -188,7 +188,7 @@ def handle_message(event):
                 "actions": actions
             }
         }
-
+        print(actions) # test
         # 回覆使用者訊息，使用 Checkbox Template 提供選項
         reply_message = {
             "replyToken": event.reply_token,
