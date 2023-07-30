@@ -138,9 +138,7 @@ def handle_message(event):
     # 在此處使用 MongoDB 進行資料庫操作
     # 例如，儲存使用者的 todo list
     collection = db.get_collection("todo_lists")  # 替換成你的集合名稱
-    
-    global todo_list
-    global todo_dict
+
     query = {"user_id": userID}
     result = collection.find_one(query)
     # 檢查結果是否為 None，即是否找到該 user_id 的資料
@@ -255,6 +253,27 @@ def handle_message(event):
 @handler.add(PostbackEvent)
 def handle_message(event):
     print(event.postback.data)
+    userID = event.source.user_id
+    # 在此處使用 MongoDB 進行資料庫操作
+    # 例如，儲存使用者的 todo list
+    collection = db.get_collection("todo_lists")  # 替換成你的集合名稱
+    
+    query = {"user_id": userID}
+    result = collection.find_one(query)
+    # 檢查結果是否為 None，即是否找到該 user_id 的資料
+    if result is None:
+        collection.insert_one({"user_id": userID, "todo_item": []})
+    todo_list = result.get("todo_item", []) # default value is an empty list
+
+    # 解析使用者選擇的項目編號
+    selected_index = int(event.postback.data.split()[1]) - 1  # 因為使用者輸入的編號是從 1 開始，而我們的索引是從 0 開始
+    # 執行刪除功能
+    del todo_list[selected_index]
+    update = {"$set": {"todo_item": todo_list}}
+    result = collection.update_one(query, update)
+
+    # 回覆 "已刪除!" 的訊息給使用者
+    line_bot_api.reply_message(event.reply_token, TextSendMessage(text="已刪除!"))
 
 
 @handler.add(MemberJoinedEvent)
