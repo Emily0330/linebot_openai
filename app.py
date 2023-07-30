@@ -202,6 +202,8 @@ def handle_message(event):
         }
         response = requests.post("https://api.line.me/v2/bot/message/reply", json=reply_message, headers=headers)
 
+        print("here!") #test
+
     elif msg.startswith("/delete_confirm "):
         # 解析使用者選擇的項目編號
         selected_index = int(msg.split()[1]) - 1  # 因為使用者輸入的編號是從 1 開始，而我們的索引是從 0 開始
@@ -210,12 +212,14 @@ def handle_message(event):
         update = {"$set": {"todo_item": todo_list}} # $set是運算子
         result = collection.update_one(query, update)
 
+        print("Hi!") # test
+
         # 取得 Line bot 的 reply_token
         reply_token = event.reply_token
         # 使用 requests.post 發送 "已刪除!" 的訊息給使用者
         line_bot_api.reply_message(reply_token, "已刪除!")
 
-        return jsonify({"success": True})
+    # return jsonify({"success": True})
 
         '''
         if co_possi_item == 0:
@@ -244,6 +248,7 @@ def handle_message(event):
     else:
         line_bot_api.reply_message(event.reply_token, TextSendMessage(text="TODO機器人還沒有這個功能唷!\n\
                                                                       趕快聯繫開發者許願吧!"))
+    return jsonify({"success": True})
 
 @handler.add(PostbackEvent)
 def handle_message(event):
