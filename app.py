@@ -1,4 +1,6 @@
-from flask import Flask, request, abort
+from flask import Flask, request, abort, jsonify
+
+import requests
 
 from linebot import (
     LineBotApi, WebhookHandler
@@ -35,17 +37,6 @@ mongo_uri = "mongodb+srv://qomolanma:zDZvD94Q3D7bOw0b@cluster0.bojsa1o.mongodb.n
 client = pymongo.MongoClient(mongo_uri)
 db = client.get_database("TODO_bot")  # 替換成你的資料庫名稱
 
-'''
-def GPT_response(text):
-    # 接收回應
-    response = openai.Completion.create(model="text-davinci-003", prompt=text, temperature=0.5, max_tokens=500)
-    print(response)
-    # 重組回應
-    answer = response['choices'][0]['text'].replace('。','')
-    return answer
-'''
-# uid='000'
-
 # 監聽所有來自 /callback 的 Post Request
 @app.route("/callback", methods=['POST'])
 def callback():
@@ -61,7 +52,6 @@ def callback():
         abort(400)
     return 'OK'
 
-# todo_list=[]
 todo_dict={}
 '''
 {
@@ -77,21 +67,16 @@ def handle_message(event):
     # 例如，儲存使用者的 todo list
     collection = db.get_collection("todo_lists")  # 替換成你的集合名稱
     
-    # echo
-    # line_bot_api.reply_message(event.reply_token, TextSendMessage(msg))
     global todo_list
     global todo_dict
-    # if userID not in todo_dict:
-        # todo_dict[userID]=[]
     query = {"user_id": userID}
     result = collection.find_one(query)
-    # print(type(result)) #test
     # 檢查結果是否為 None，即是否找到該 user_id 的資料
     if result is None:
         collection.insert_one({"user_id": userID, "todo_item": []})
     todo_list = result.get("todo_item", []) # default value is an empty list
     # add
-    if msg[:4] == "add ":
+    if str(msg[:4]).lower() == "add ":
         tmp=msg[4:].split(' ')
         for i in tmp:
             if i not in todo_list:
@@ -100,45 +85,90 @@ def handle_message(event):
         result = collection.update_one(query, update)
         line_bot_api.reply_message(event.reply_token, TextSendMessage(text="Added successfully!"))
 
-    elif msg == "list":
+    elif str(msg).lower() == "list":
         if not todo_list: # the list is empty
             line_bot_api.reply_message(event.reply_token, TextSendMessage(text="今天還沒有待辦事項哦!\n使用add指令添加吧~"))
         else:
             retu = "、".join(todo_list)
             line_bot_api.reply_message(event.reply_token, TextSendMessage(text=f"今日待辦事項:\n{retu}"))
-        """
-        if not todo_dict[userID]: # the usr's list is empty
-            line_bot_api.reply_message(event.reply_token, TextSendMessage(text="今天還沒有待辦事項哦!\n使用add指令添加吧~"))
-        else:
-            retu = "、".join(todo_dict[userID])
-            line_bot_api.reply_message(event.reply_token, TextSendMessage(text=f"今日待辦事項:\n{retu}"))
-        """
-    elif msg[:4] == "del ":
+            '''
+    # delete
+    elif str(msg[:4]).lower() == "del ":
         del_item=msg[4:]
-        """
-        if del_item in todo_dict[userID]:
-            todo_dict[userID].remove(del_item)
-            line_bot_api.reply_message(event.reply_token, TextSendMessage(text="Deleted successfully!"))
-            print(todo_dict) # test
-        """
-        if del_item in todo_list:
-            todo_list.remove(del_item)
-            update = {"$set": {"todo_item": todo_list}} # $set是運算子
-            result = collection.update_one(query, update)
-            line_bot_api.reply_message(event.reply_token, TextSendMessage(text="Deleted successfully!"))
-        elif del_item.strip() == "":
+        
+        if del_item.strip() == "":
             line_bot_api.reply_message(event.reply_token, TextSendMessage(text="你沒有告訴我要刪除什麼XD"))
         else:
-            line_bot_api.reply_message(event.reply_token, TextSendMessage(text=f"{del_item} 不在今日的TODO list!"))
+            # 動態生成 Checkbox Template 的 actions
+            actions = []
+            for i, item in enumerate(todo_list):
+                action = {
+                    "type": "postback",
+                    "label": item,
+                    "data": f"/delete_confirm {i+1}"  # 回傳使用者選擇的項目編號（從 1 開始）
+                }
+                actions.append(action)
 
-    elif msg == "reset":
+            # 建立 Checkbox Template 選單
+            checkbox_template = {
+                "type": "template",
+                "altText": "請勾選要刪除的項目",
+                "template": {
+                    "type": "buttons",
+                    "text": response,
+                    "actions": actions
+                }
+            }
+
+            # 回覆使用者訊息，使用 Checkbox Template 提供選項
+            reply_message = {
+                "replyToken": data["events"][0]["replyToken"],
+                "messages": [checkbox_template]
+            }
+
+            # 傳送回覆訊息給 Line bot
+            headers = {
+                "Content-Type": "application/json",
+                "Authorization": "Bearer YOUR_CHANNEL_ACCESS_TOKEN"  # 替換成你的 Line bot 的 Channel Access Token
+            }
+            response = requests.post("https://api.line.me/v2/bot/message/reply", json=reply_message, headers=headers)
+            '''
+            '''
+            del_list=[]
+            first_char = del_item[0]
+            for item in todo_list:
+                if first_char == item[0]:
+                    del_list.append(item)
+            match len(del_list):
+                case 0:
+                    line_bot_api.reply_message(event.reply_token, TextSendMessage(text=f"{del_item} 不在今日的TODO list!"))
+                case 1:
+                    todo_list.remove(del_item)
+                    update = {"$set": {"todo_item": todo_list}} # $set是運算子
+                    result = collection.update_one(query, update)
+                    line_bot_api.reply_message(event.reply_token, TextSendMessage(text="Deleted successfully!"))
+                case _: # default case, more than one item
+            '''
+
+            '''
+            if co_possi_item == 0:
+                line_bot_api.reply_message(event.reply_token, TextSendMessage(text=f"{del_item} 不在今日的TODO list!"))
+            elif
+            elif del_item in todo_list:
+                todo_list.remove(del_item)
+                update = {"$set": {"todo_item": todo_list}} # $set是運算子
+                result = collection.update_one(query, update)
+                line_bot_api.reply_message(event.reply_token, TextSendMessage(text="Deleted successfully!"))
+            else:
+            '''
+    elif str(msg).lower() == "reset":
         todo_list = []
         # todo_dict[userID] = [] # dict
         update = {"$set": {"todo_item": todo_list}} # $set是運算子
         result = collection.update_one(query, update)
         line_bot_api.reply_message(event.reply_token, TextSendMessage(text="TODO list has been reset!\n\
                                                                       Enjoy your day <3"))
-    elif msg == "help":
+    elif str(msg).lower() == "help":
         line_bot_api.reply_message(event.reply_token, TextSendMessage(text="1. 輸入「add 事項1 事項2 事項3 ... 」新增今日待辦事項\n\
                                                                       2. 輸入「list」以列出今日待辦事項\n\
                                                                       3. 輸入「del 某事項」以刪除某待辦事項\n\
@@ -147,11 +177,79 @@ def handle_message(event):
     else:
         line_bot_api.reply_message(event.reply_token, TextSendMessage(text="TODO機器人還沒有這個功能唷!\n\
                                                                       趕快聯繫開發者許願吧!"))
-    '''
-    with open("usr_info.json", "a", encoding="utf-8") as f:
-        json.dump(todo_dict, f, indent=2, sort_keys=False, ensure_ascii=False)
-        f.close()
-    '''
+
+
+# Line bot 接收訊息的 Webhook 路由
+@app.route("/webhook", methods=["POST"])
+def webhook():
+    data = request.get_json()
+
+    # 獲取使用者的訊息內容
+    user_id = data["events"][0]["source"]["userId"]
+    message_text = data["events"][0]["message"]["text"]
+    # 在此處使用 MongoDB 進行資料庫操作
+    # 例如，儲存使用者的 todo list
+    collection = db.get_collection("todo_lists")  # 替換成你的集合名稱
+
+    query = {"user_id": user_id}
+    result = collection.find_one(query)
+    # 檢查結果是否為 None，即是否找到該 user_id 的資料
+    if result is None:
+        collection.insert_one({"user_id": user_id, "todo_item": []})
+    todo_items = result.get("todo_item", []) # default value is an empty list
+
+    if message_text == "del":
+        response = "請選擇要刪除的項目："
+
+        # 動態生成 Checkbox Template 的 actions
+        actions = []
+        for i, item in enumerate(todo_items):
+            action = {
+                "type": "postback",
+                "label": item,
+                "data": f"/delete_confirm {i+1}"  # 回傳使用者選擇的項目編號（從 1 開始）
+            }
+            actions.append(action)
+
+        # 建立 Checkbox Template 選單
+        checkbox_template = {
+            "type": "template",
+            "altText": "請勾選要刪除的項目",
+            "template": {
+                "type": "buttons",
+                "text": response,
+                "actions": actions
+            }
+        }
+
+        # 回覆使用者訊息，使用 Checkbox Template 提供選項
+        reply_message = {
+            "replyToken": data["events"][0]["replyToken"],
+            "messages": [checkbox_template]
+        }
+
+        # 傳送回覆訊息給 Line bot
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer YOUR_CHANNEL_ACCESS_TOKEN"  # 替換成你的 Line bot 的 Channel Access Token
+        }
+        response = requests.post("https://api.line.me/v2/bot/message/reply", json=reply_message, headers=headers)
+
+    elif message_text.startswith("/delete_confirm "):
+        # 解析使用者選擇的項目編號
+        selected_index = int(message_text.split()[1]) - 1  # 因為使用者輸入的編號是從 1 開始，而我們的索引是從 0 開始
+        # 執行刪除功能
+        del todo_items[selected_index]
+        update = {"$set": {"todo_item": todo_items}} # $set是運算子
+        result = collection.update_one(query, update)
+        
+        # 取得 Line bot 的 reply_token
+        reply_token = data["events"][0]["replyToken"]
+        # 使用 requests.post 發送 "已刪除!" 的訊息給使用者
+        line_bot_api.reply_message(reply_token, "已刪除!")
+
+
+    return jsonify({"success": True})
 @handler.add(PostbackEvent)
 def handle_message(event):
     print(event.postback.data)
@@ -159,7 +257,6 @@ def handle_message(event):
 
 @handler.add(MemberJoinedEvent)
 def welcome(event):
-    # global uid
     uid = event.joined.members[0].user_id
     gid = event.source.group_id
     profile = line_bot_api.get_group_member_profile(gid, uid)
