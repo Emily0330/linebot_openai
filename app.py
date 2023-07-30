@@ -92,20 +92,32 @@ def handle_message(event):
             line_bot_api.reply_message(event.reply_token, TextSendMessage(text=f"今日待辦事項:\n{retu}"))
             
     # delete
-    elif str(msg).lower() == "del":
+    elif str(msg).lower().startswith("del"):
         response = "請選擇要刪除的項目："
 
         # 動態生成 Checkbox Template 的 actions
         actions = []
-        for i, item in enumerate(todo_list):
-            if i >= 4: # actions只能有4個items
-                break
-            action = {
-                "type": "postback",
-                "label": item, # item
-                "data": f"/delete_confirm {i+1}"  # 回傳使用者選擇的項目編號（從 1 開始）
-            }
-            actions.append(action)
+        if len(msg) == 3:
+            for i, item in enumerate(todo_list):
+                if i >= 4: # actions只能有4個items
+                    break
+                action = {
+                    "type": "postback",
+                    "label": item, # item
+                    "data": f"/delete_confirm {i+1}"  # 回傳使用者選擇的項目編號（從 1 開始）
+                }
+                actions.append(action)
+        else: #使用者有指定要刪除的事項
+            for i, item in enumerate(todo_list):
+                if len(actions) >= 4: # actions只能有4個items
+                    break
+                if str(msg[4:]) in item:
+                    action = {
+                        "type": "postback",
+                        "label": item, # item
+                        "data": f"/delete_confirm {i+1}"  # 回傳使用者選擇的項目編號（從 1 開始）
+                    }
+                    actions.append(action)
         # 建立 Buttons Template 選單
         checkbox_template = TemplateSendMessage(
             alt_text="Please select what you want to delete.",
@@ -139,7 +151,7 @@ def handle_message(event):
 
 @handler.add(PostbackEvent)
 def handle_message(event):
-    print(event.postback.data)
+    print(event.postback.data) # check at backend
     userID = event.source.user_id
     # 在此處使用 MongoDB 進行資料庫操作
     # 例如，儲存使用者的 todo list
