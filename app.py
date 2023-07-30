@@ -125,6 +125,7 @@ def handle_message(event):
             todo_list.remove(del_item)
             update = {"$set": {"todo_item": todo_list}} # $set是運算子
             result = collection.update_one(query, update)
+            line_bot_api.reply_message(event.reply_token, TextSendMessage(text="Deleted successfully!"))
         elif del_item.strip() == "":
             line_bot_api.reply_message(event.reply_token, TextSendMessage(text="你沒有告訴我要刪除什麼XD"))
         else:
