@@ -198,7 +198,7 @@ def handle_message(event):
         # 傳送回覆訊息給 Line bot
         headers = {
             "Content-Type": "application/json",
-            "Authorization": "Bearer YOUR_CHANNEL_ACCESS_TOKEN"  # 替換成你的 Line bot 的 Channel Access Token
+            "Authorization": f"Bearer {os.getenv('CHANNEL_ACCESS_TOKEN')}"  # 替換成你的 Line bot 的 Channel Access Token
         }
         response = requests.post("https://api.line.me/v2/bot/message/reply", json=reply_message, headers=headers)
 
