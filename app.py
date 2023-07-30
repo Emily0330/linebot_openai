@@ -37,6 +37,7 @@ mongo_uri = "mongodb+srv://qomolanma:zDZvD94Q3D7bOw0b@cluster0.bojsa1o.mongodb.n
 client = pymongo.MongoClient(mongo_uri)
 db = client.get_database("TODO_bot")  # 替換成你的資料庫名稱
 
+'''
 # 監聽所有來自 /callback 的 Post Request
 @app.route("/callback", methods=['POST'])
 def callback():
@@ -51,7 +52,7 @@ def callback():
     except InvalidSignatureError:
         abort(400)
     return 'OK'
-
+'''
 todo_dict={}
 '''
 {
@@ -180,7 +181,7 @@ def handle_message(event):
 
 
 # Line bot 接收訊息的 Webhook 路由
-@app.route("/webhook", methods=["POST"])
+@app.route("/callback", methods=["POST"])
 def webhook():
     data = request.get_json()
 
@@ -242,7 +243,7 @@ def webhook():
         del todo_items[selected_index]
         update = {"$set": {"todo_item": todo_items}} # $set是運算子
         result = collection.update_one(query, update)
-        
+
         # 取得 Line bot 的 reply_token
         reply_token = data["events"][0]["replyToken"]
         # 使用 requests.post 發送 "已刪除!" 的訊息給使用者
