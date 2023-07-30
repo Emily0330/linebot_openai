@@ -10,6 +10,7 @@ packages = [{include = "linebot_openai"}]
 python = "^3.10"
 flask = "^2.3.2"
 line-bot-sdk = "^3.1.0"
+pymongo = "^4.4.1"
 
 
 [build-system]
