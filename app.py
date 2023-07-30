@@ -29,7 +29,7 @@ handler = WebhookHandler(os.getenv('CHANNEL_SECRET'))
 # openai.api_key = os.getenv('OPENAI_API_KEY')
 
 # 設定 MongoDB Atlas 連線字串, <username>:<password>
-mongo_uri = "mongodb+srv://<qomolanma>:<zDZvD94Q3D7bOw0b>@cluster0.bojsa1o.mongodb.net/?retryWrites=true&w=majority"
+mongo_uri = "mongodb+srv://qomolanma:zDZvD94Q3D7bOw0b@cluster0.bojsa1o.mongodb.net/?retryWrites=true&w=majority"
 
 # 連線到 MongoDB Atlas Cluster
 client = pymongo.MongoClient(mongo_uri)
