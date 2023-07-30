@@ -171,18 +171,20 @@ def handle_message(event):
         # 動態生成 Checkbox Template 的 actions
         actions = []
         for i, item in enumerate(todo_list):
+            if i >= 4: # actions只能有4個utems
+                break
             action = {
                 "type": "postback",
-                "label": item,
+                "label": item, # item
                 "data": f"/delete_confirm {i+1}"  # 回傳使用者選擇的項目編號（從 1 開始）
             }
             actions.append(action)
         # 建立 Buttons Template 選單
         checkbox_template = TemplateSendMessage(
-            alt_text="請勾選要刪除的項目",
+            alt_text="Please select what you want to delete.",
             template=ButtonsTemplate(
                 title=response,
-                text="",
+                text="Please select what you want to delete: ",
                 actions=actions
             )
         )
