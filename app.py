@@ -177,8 +177,19 @@ def handle_message(event):
                 "data": f"/delete_confirm {i+1}"  # 回傳使用者選擇的項目編號（從 1 開始）
             }
             actions.append(action)
-
-        # 建立 Checkbox Template 選單
+        # 建立 Buttons Template 選單
+        checkbox_template = TemplateSendMessage(
+            alt_text="請勾選要刪除的項目",
+            template=ButtonsTemplate(
+                title=response,
+                text="",
+                actions=actions
+            )
+        )
+        print(checkbox_template)
+        # 回覆使用者訊息，使用 Buttons Template 提供選項
+        line_bot_api.reply_message(event.reply_token, checkbox_template)
+        """ # 建立 Checkbox Template 選單
         checkbox_template = {
             "type": "template",
             "altText": "請勾選要刪除的項目",
@@ -188,20 +199,9 @@ def handle_message(event):
                 "actions": actions
             }
         }
-        print(actions) # test
-        # 回覆使用者訊息，使用 Checkbox Template 提供選項
-        reply_message = {
-            "replyToken": event.reply_token,
-            "messages": [checkbox_template]
-        }
-
-        # 傳送回覆訊息給 Line bot
-        headers = {
-            "Content-Type": "application/json",
-            "Authorization": f"Bearer {os.getenv('CHANNEL_ACCESS_TOKEN')}"  # 替換成你的 Line bot 的 Channel Access Token
-        }
+        
         # response = requests.post("https://api.line.me/v2/bot/message/reply", json=reply_message, headers=headers)
-        line_bot_api.reply_message(event.reply_token, TemplateSendMessage(alt_text="請勾選要刪除的項目", template=checkbox_template))
+        line_bot_api.reply_message(event.reply_token, TemplateSendMessage(alt_text="請勾選要刪除的項目", template=checkbox_template)) """
         print("here!") #test
 
     elif msg.startswith("/delete_confirm "):
