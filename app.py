@@ -85,7 +85,7 @@ def handle_message(event):
         # todo_dict[userID]=[]
     query = {"user_id": userID}
     result = collection.find_one(query)
-
+    print(type(result)) #test
     # 檢查結果是否為 None，即是否找到該 user_id 的資料
     if result is None:
         collection.insert_one({"user_id": userID, "todo_item": []})
