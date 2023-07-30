@@ -200,8 +200,8 @@ def handle_message(event):
             "Content-Type": "application/json",
             "Authorization": f"Bearer {os.getenv('CHANNEL_ACCESS_TOKEN')}"  # 替換成你的 Line bot 的 Channel Access Token
         }
-        response = requests.post("https://api.line.me/v2/bot/message/reply", json=reply_message, headers=headers)
-
+        # response = requests.post("https://api.line.me/v2/bot/message/reply", json=reply_message, headers=headers)
+        line_bot_api.reply_message(event.reply_token, [checkbox_template])
         print("here!") #test
 
     elif msg.startswith("/delete_confirm "):
