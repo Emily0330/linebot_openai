@@ -37,7 +37,7 @@ mongo_uri = "mongodb+srv://qomolanma:zDZvD94Q3D7bOw0b@cluster0.bojsa1o.mongodb.n
 client = pymongo.MongoClient(mongo_uri)
 db = client.get_database("TODO_bot")  # 替換成你的資料庫名稱
 
-'''
+
 # 監聽所有來自 /callback 的 Post Request
 @app.route("/callback", methods=['POST'])
 def callback():
@@ -52,7 +52,76 @@ def callback():
     except InvalidSignatureError:
         abort(400)
     return 'OK'
-'''
+# Line bot 接收訊息的 Webhook 路由
+# @app.route("/callback", methods=["POST"])
+def webhook():
+    data = request.get_json()
+
+    # 獲取使用者的訊息內容
+    user_id = data["events"][0]["source"]["userId"]
+    message_text = data["events"][0]["message"]["text"]
+    # 在此處使用 MongoDB 進行資料庫操作
+    # 例如，儲存使用者的 todo list
+    collection = db.get_collection("todo_lists")  # 替換成你的集合名稱
+
+    query = {"user_id": user_id}
+    result = collection.find_one(query)
+    # 檢查結果是否為 None，即是否找到該 user_id 的資料
+    if result is None:
+        collection.insert_one({"user_id": user_id, "todo_item": []})
+    todo_items = result.get("todo_item", []) # default value is an empty list
+
+    if message_text == "del":
+        response = "請選擇要刪除的項目："
+
+        # 動態生成 Checkbox Template 的 actions
+        actions = []
+        for i, item in enumerate(todo_items):
+            action = {
+                "type": "postback",
+                "label": item,
+                "data": f"/delete_confirm {i+1}"  # 回傳使用者選擇的項目編號（從 1 開始）
+            }
+            actions.append(action)
+
+        # 建立 Checkbox Template 選單
+        checkbox_template = {
+            "type": "template",
+            "altText": "請勾選要刪除的項目",
+            "template": {
+                "type": "buttons",
+                "text": response,
+                "actions": actions
+            }
+        }
+
+        # 回覆使用者訊息，使用 Checkbox Template 提供選項
+        reply_message = {
+            "replyToken": data["events"][0]["replyToken"],
+            "messages": [checkbox_template]
+        }
+
+        # 傳送回覆訊息給 Line bot
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer YOUR_CHANNEL_ACCESS_TOKEN"  # 替換成你的 Line bot 的 Channel Access Token
+        }
+        response = requests.post("https://api.line.me/v2/bot/message/reply", json=reply_message, headers=headers)
+
+    elif message_text.startswith("/delete_confirm "):
+        # 解析使用者選擇的項目編號
+        selected_index = int(message_text.split()[1]) - 1  # 因為使用者輸入的編號是從 1 開始，而我們的索引是從 0 開始
+        # 執行刪除功能
+        del todo_items[selected_index]
+        update = {"$set": {"todo_item": todo_items}} # $set是運算子
+        result = collection.update_one(query, update)
+
+        # 取得 Line bot 的 reply_token
+        reply_token = data["events"][0]["replyToken"]
+        # 使用 requests.post 發送 "已刪除!" 的訊息給使用者
+        line_bot_api.reply_message(reply_token, "已刪除!")
+
+    return jsonify({"success": True})
 todo_dict={}
 '''
 {
@@ -179,78 +248,6 @@ def handle_message(event):
         line_bot_api.reply_message(event.reply_token, TextSendMessage(text="TODO機器人還沒有這個功能唷!\n\
                                                                       趕快聯繫開發者許願吧!"))
 
-
-# Line bot 接收訊息的 Webhook 路由
-@app.route("/callback", methods=["POST"])
-def webhook():
-    data = request.get_json()
-
-    # 獲取使用者的訊息內容
-    user_id = data["events"][0]["source"]["userId"]
-    message_text = data["events"][0]["message"]["text"]
-    # 在此處使用 MongoDB 進行資料庫操作
-    # 例如，儲存使用者的 todo list
-    collection = db.get_collection("todo_lists")  # 替換成你的集合名稱
-
-    query = {"user_id": user_id}
-    result = collection.find_one(query)
-    # 檢查結果是否為 None，即是否找到該 user_id 的資料
-    if result is None:
-        collection.insert_one({"user_id": user_id, "todo_item": []})
-    todo_items = result.get("todo_item", []) # default value is an empty list
-
-    if message_text == "del":
-        response = "請選擇要刪除的項目："
-
-        # 動態生成 Checkbox Template 的 actions
-        actions = []
-        for i, item in enumerate(todo_items):
-            action = {
-                "type": "postback",
-                "label": item,
-                "data": f"/delete_confirm {i+1}"  # 回傳使用者選擇的項目編號（從 1 開始）
-            }
-            actions.append(action)
-
-        # 建立 Checkbox Template 選單
-        checkbox_template = {
-            "type": "template",
-            "altText": "請勾選要刪除的項目",
-            "template": {
-                "type": "buttons",
-                "text": response,
-                "actions": actions
-            }
-        }
-
-        # 回覆使用者訊息，使用 Checkbox Template 提供選項
-        reply_message = {
-            "replyToken": data["events"][0]["replyToken"],
-            "messages": [checkbox_template]
-        }
-
-        # 傳送回覆訊息給 Line bot
-        headers = {
-            "Content-Type": "application/json",
-            "Authorization": "Bearer YOUR_CHANNEL_ACCESS_TOKEN"  # 替換成你的 Line bot 的 Channel Access Token
-        }
-        response = requests.post("https://api.line.me/v2/bot/message/reply", json=reply_message, headers=headers)
-
-    elif message_text.startswith("/delete_confirm "):
-        # 解析使用者選擇的項目編號
-        selected_index = int(message_text.split()[1]) - 1  # 因為使用者輸入的編號是從 1 開始，而我們的索引是從 0 開始
-        # 執行刪除功能
-        del todo_items[selected_index]
-        update = {"$set": {"todo_item": todo_items}} # $set是運算子
-        result = collection.update_one(query, update)
-
-        # 取得 Line bot 的 reply_token
-        reply_token = data["events"][0]["replyToken"]
-        # 使用 requests.post 發送 "已刪除!" 的訊息給使用者
-        line_bot_api.reply_message(reply_token, "已刪除!")
-
-
-    return jsonify({"success": True})
 @handler.add(PostbackEvent)
 def handle_message(event):
     print(event.postback.data)
