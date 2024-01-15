@@ -27,13 +27,15 @@ static_tmp_path = os.path.join(os.path.dirname(__file__), 'static', 'tmp')
 line_bot_api = LineBotApi(os.getenv('CHANNEL_ACCESS_TOKEN')) #記得加回去
 # Channel Secret
 handler = WebhookHandler(os.getenv('CHANNEL_SECRET'))
+# OPENAI API Key初始化設定
+# openai.api_key = os.getenv('OPENAI_API_KEY')
 
 # 設定 MongoDB Atlas 連線字串, <username>:<password>
 mongo_uri = "mongodb+srv://qomolanma:zDZvD94Q3D7bOw0b@cluster0.bojsa1o.mongodb.net/?retryWrites=true&w=majority"
 
 # 連線到 MongoDB Atlas Cluster
 client = pymongo.MongoClient(mongo_uri)
-db = client.get_database("ta_chu")  # 替換成你的資料庫名稱
+db = client.get_database("TODO_bot")  # 替換成你的資料庫名稱
 
 
 # 監聽所有來自 /callback 的 Post Request
@@ -51,37 +53,72 @@ def callback():
         abort(400)
     return 'OK'
 
-tachu_dict={}
+todo_dict={}
 '''
 {
-    "name": "" #link
+    "USER_ID": [] #todo_list
 }
 '''
 # 處理訊息
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
     msg = event.message.text
-    # userID = event.source.user_id # get userID
+    userID = event.source.user_id # get userID
     # 在此處使用 MongoDB 進行資料庫操作
     # 例如，儲存使用者的 todo list
+    collection = db.get_collection("todo_lists")  # 替換成你的集合名稱
 
+    query = {"user_id": userID}
+    result = collection.find_one(query)
+    # 檢查結果是否為 None，即是否找到該 user_id 的資料
+    if result is None:
+        collection.insert_one({"user_id": userID, "todo_item": []})
+    todo_list = result.get("todo_item", []) # default value is an empty list
     # add
-    if str(msg).strip() == "現在集點":
-        
+    if str(msg[:4]).lower() == "add ":
+        tmp=msg[4:].split(' ')
+        for i in tmp:
+            if i not in todo_list:
+                todo_list.append(i)
+        update = {"$set": {"todo_item": todo_list}} # $set是運算子
+        result = collection.update_one(query, update)
         line_bot_api.reply_message(event.reply_token, TextSendMessage(text="Added successfully!"))
-        collection = db.get_collection("spots")  # 替換成你的集合名稱
-        # 檢索所有資料
-        cursor = collection.find()
-        # 將檢索到的資料轉換為 Python 列表
-        data = list(cursor)
 
-        # 隨機選擇一個項目
-        random_item = random.choice(data)
+    elif str(msg).lower() == "list":
+        if not todo_list: # the list is empty
+            line_bot_api.reply_message(event.reply_token, TextSendMessage(text="今天還沒有待辦事項哦!\n使用add指令添加吧~"))
+        else:
+            retu = "、".join(todo_list)
+            line_bot_api.reply_message(event.reply_token, TextSendMessage(text=f"今日待辦事項:\n{retu}"))
+            
+    # delete
+    elif str(msg).lower().startswith("del"):
+        response = "請選擇要刪除的項目："
 
-        # 現在您有了隨機選擇的項目，可以使用它進一步處理或傳送給使用者
-        print("隨機選擇的項目：", random_item[name], random_item[link])
-   
-        """ # 建立 Buttons Template 選單
+        # 動態生成 Checkbox Template 的 actions
+        actions = []
+        if len(msg) == 3:
+            for i, item in enumerate(todo_list):
+                if i >= 4: # actions只能有4個items
+                    break
+                action = {
+                    "type": "postback",
+                    "label": item, # item
+                    "data": f"/delete_confirm {i+1}"  # 回傳使用者選擇的項目編號（從 1 開始）
+                }
+                actions.append(action)
+        else: #使用者有指定要刪除的事項
+            for i, item in enumerate(todo_list):
+                if len(actions) >= 4: # actions只能有4個items
+                    break
+                if str(msg[4:]) in item:
+                    action = {
+                        "type": "postback",
+                        "label": item, # item
+                        "data": f"/delete_confirm {i+1}"  # 回傳使用者選擇的項目編號（從 1 開始）
+                    }
+                    actions.append(action)
+        # 建立 Buttons Template 選單
         checkbox_template = TemplateSendMessage(
             alt_text="Please select what you want to delete.",
             template=ButtonsTemplate(
@@ -92,9 +129,15 @@ def handle_message(event):
         )
         print(checkbox_template)
         # 回覆使用者訊息，使用 Buttons Template 提供選項
-        line_bot_api.reply_message(event.reply_token, checkbox_template) """
+        line_bot_api.reply_message(event.reply_token, checkbox_template)
 
-   
+    elif str(msg).lower() == "reset":
+        todo_list = []
+        # todo_dict[userID] = [] # dict
+        update = {"$set": {"todo_item": todo_list}} # $set是運算子
+        result = collection.update_one(query, update)
+        line_bot_api.reply_message(event.reply_token, TextSendMessage(text="TODO list has been reset!\n\
+                                                                      Enjoy your day <3"))
     elif str(msg).lower() == "help":
         line_bot_api.reply_message(event.reply_token, TextSendMessage(text="1. 輸入「add 事項1 事項2 事項3 ... 」新增今日待辦事項\n\
                                                                       2. 輸入「list」以列出今日待辦事項\n\
@@ -102,11 +145,11 @@ def handle_message(event):
                                                                       4. 輸入「reset」一次清空所有待辦事項\n\
                                                                       5. 輸入「help」取得使用說明"))
     else:
-        line_bot_api.reply_message(event.reply_token, TextSendMessage(text="機器人還沒有這個功能唷!\n\
+        line_bot_api.reply_message(event.reply_token, TextSendMessage(text="TODO機器人還沒有這個功能唷!\n\
                                                                       趕快聯繫開發者許願吧!"))
     return jsonify({"success": True})
 
-""" @handler.add(PostbackEvent)
+@handler.add(PostbackEvent)
 def handle_message(event):
     print(event.postback.data) # check at backend
     userID = event.source.user_id
@@ -129,17 +172,17 @@ def handle_message(event):
     result = collection.update_one(query, update)
 
     # 回覆 "已刪除!" 的訊息給使用者
-    line_bot_api.reply_message(event.reply_token, TextSendMessage(text="已刪除!")) """
+    line_bot_api.reply_message(event.reply_token, TextSendMessage(text="已刪除!"))
 
 
-""" @handler.add(MemberJoinedEvent)
+@handler.add(MemberJoinedEvent)
 def welcome(event):
     uid = event.joined.members[0].user_id
     gid = event.source.group_id
     profile = line_bot_api.get_group_member_profile(gid, uid)
     name = profile.display_name
     message = TextSendMessage(text=f'{name}歡迎加入，請輸入「help」取得使用說明')
-    line_bot_api.reply_message(event.reply_token, message) """
+    line_bot_api.reply_message(event.reply_token, message)
         
         
 import os
