@@ -68,20 +68,18 @@ def handle_message(event):
     # add
     if str(msg).strip() == "現在集點":
         
+        line_bot_api.reply_message(event.reply_token, TextSendMessage(text="Added successfully!"))
         collection = db.get_collection("spots")  # 替換成你的集合名稱
         # 檢索所有資料
         cursor = collection.find()
         # 將檢索到的資料轉換為 Python 列表
         data = list(cursor)
-        print(data) #test
 
         # 隨機選擇一個項目
         random_item = random.choice(data)
 
         # 現在您有了隨機選擇的項目，可以使用它進一步處理或傳送給使用者
         print("隨機選擇的項目：", random_item[name], random_item[link])
-        line_bot_api.reply_message(event.reply_token, TextSendMessage(text=f"試試「{random_item[name]}」吧!\n\
-                                                                      {random_item[link]}\n"))
    
         """ # 建立 Buttons Template 選單
         checkbox_template = TemplateSendMessage(
