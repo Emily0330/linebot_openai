@@ -19,6 +19,7 @@ import datetime
 import time
 # import json
 import json
+import random
 #======python的函數庫==========
 
 app = Flask(__name__)
@@ -66,22 +67,27 @@ def handle_message(event):
     # 例如，儲存使用者的 todo list
 
     # add
-    if str(msg).strip() == "現在集點":
+    if str(msg).strip() == "集點" or str(msg).strip() == "抽" or str(msg).strip() == "去哪裡" or str(msg).strip() == "現在集點":
         
-        collection = db.get_collection("spots")  # 替換成你的集合名稱
+        collection = db.get_collection("spots")
+        collection1 = db.get_collection("Art")
+        # 替換成你的集合名稱
         # 檢索所有資料
         cursor = collection.find()
+        cursor1 = collection1.find()
         # 將檢索到的資料轉換為 Python 列表
         data = list(cursor)
+        data1 = list(cursor1)
+        data = data+data1
         print(data) #test
-
+        # 使用時間來生成種子
+        random.seed(int(time.time()))
         # 隨機選擇一個項目
         random_item = random.choice(data)
-
+        print(random_item) #test
         # 現在您有了隨機選擇的項目，可以使用它進一步處理或傳送給使用者
-        print("隨機選擇的項目：", random_item[name], random_item[link])
-        line_bot_api.reply_message(event.reply_token, TextSendMessage(text=f"試試「{random_item[name]}」吧!\n\
-                                                                      {random_item[link]}\n"))
+        print("隨機選擇的項目：", random_item['name'], random_item['link'])
+        line_bot_api.reply_message(event.reply_token, TextSendMessage(text=f"想不到要去哪裡嗎?\n建議您可以前往「{random_item['name']}」品嚐美食!\n\n{random_item['link']}\n\n另外，用餐並留下評論便可以集點喔~\n快來試試吧！"))
    
         """ # 建立 Buttons Template 選單
         checkbox_template = TemplateSendMessage(
@@ -95,17 +101,28 @@ def handle_message(event):
         print(checkbox_template)
         # 回覆使用者訊息，使用 Buttons Template 提供選項
         line_bot_api.reply_message(event.reply_token, checkbox_template) """
-
-   
-    elif str(msg).lower() == "help":
-        line_bot_api.reply_message(event.reply_token, TextSendMessage(text="1. 輸入「add 事項1 事項2 事項3 ... 」新增今日待辦事項\n\
-                                                                      2. 輸入「list」以列出今日待辦事項\n\
-                                                                      3. 輸入「del 某事項」以刪除某待辦事項\n\
-                                                                      4. 輸入「reset」一次清空所有待辦事項\n\
-                                                                      5. 輸入「help」取得使用說明"))
+    elif str(msg).strip()=='飯點':
+        collection = db.get_collection("spots")
+        cursor = collection.find()
+        data = list(cursor)
+         # 使用時間來生成種子
+        random.seed(int(time.time()))
+        # 隨機選擇一個項目
+        random_item = random.choice(data)
+        line_bot_api.reply_message(event.reply_token, TextSendMessage(text=f"想不到要去哪裡嗎?\n建議您可以前往「{random_item['name']}」品嚐美食!\n\n{random_item['link']}\n\n另外，用餐並留下評論便可以集點喔~\n快來試試吧！"))
+    elif str(msg).strip() == '藝點':
+        collection = db.get_collection("Art")
+        cursor = collection.find()
+        data = list(cursor)
+         # 使用時間來生成種子
+        random.seed(int(time.time()))
+        # 隨機選擇一個項目
+        random_item = random.choice(data)
+        line_bot_api.reply_message(event.reply_token, TextSendMessage(text=f"想不到要去哪裡嗎?\n建議您可以前往「{random_item['name']}」走走!\n\n{random_item['link']}\n\n另外，用餐並留下評論便可以集點喔~\n快來試試吧！"))
+    elif str(msg).strip() == "功能" or  str(msg).strip() == "打卡" or str(msg).strip() == "卡景點" or str(msg).strip() == "集點" or str(msg).strip() == "集點卡" or str(msg).strip() == "現在集點" or  str(msg).strip() == "探索地圖" or  str(msg).strip() == "地圖":
+        pass
     else:
-        line_bot_api.reply_message(event.reply_token, TextSendMessage(text="機器人還沒有這個功能唷!\n\
-                                                                      趕快聯繫開發者許願吧!"))
+        line_bot_api.reply_message(event.reply_token, TextSendMessage(text="踏竹還沒有這個功能唷!\n趕快聯繫我們許願吧!"))
     return jsonify({"success": True})
 
 """ @handler.add(PostbackEvent)
